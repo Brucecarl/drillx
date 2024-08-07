@@ -11,6 +11,7 @@
 const int BATCH_SIZE = 512;
 
 extern "C" void hash(uint8_t *challenge, uint8_t *nonce, uint64_t *out) {
+    printf("hello..");
     // Generate a hash function for each (challenge, nonce)
     hashx_ctx** ctxs;
     if (cudaMallocManaged(&ctxs, BATCH_SIZE * sizeof(hashx_ctx*)) != cudaSuccess) {
