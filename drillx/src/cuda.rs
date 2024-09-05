@@ -1,14 +1,16 @@
 extern "C" {
-    pub static BATCH_SIZE: u32;
-    pub fn hash(challenge: *const u8, nonce: *const u8, out: *mut u64);
+    // pub static BATCH_SIZE: u32;
+    pub fn hash(challenge: *const u8, nonce: u64, out: *mut u64,batch_size:u32);
     pub fn solve_all_stages(hashes: *const u64, out: *mut u8, sols: *mut u32);
 }
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::{sync::Arc, thread, time::Instant};
 
+    const BATCH_SIZE:u32=900;
     const INDEX_SPACE: usize = 65536;
 
     fn hashspace_size() -> usize {
@@ -18,15 +20,16 @@ mod tests {
     #[test]
     fn test_gpu() {
         let challenge = [255; 32];
-        let nonce = [2; 8];
+        let nonce = 0u64;;
         let mut hashes = vec![0u64; hashspace_size()];
         unsafe {
             // Do compute heavy hashing on gpu
             let timer = Instant::now();
             hash(
                 challenge.as_ptr(),
-                nonce.as_ptr(),
+                nonce,
                 hashes.as_mut_ptr() as *mut u64,
+                BATCH_SIZE,
             );
             println!(
                 "Gpu returned {} hashes in {} ms",
@@ -43,7 +46,7 @@ mod tests {
             for t in 0..num_threads {
                 let challenge = challenge.clone();
                 let hashes = hashes.clone();
-                let nonce = u64::from_le_bytes(nonce);
+                // let nonce = u64::from_le_bytes(nonce);
                 let handle = thread::spawn(move || {
                     let start = t * chunk_size;
                     let end = if t == num_threads - 1 {

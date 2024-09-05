@@ -1,0 +1,18 @@
+[package]
+name = "gpu-perf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+publish = false
+
+[[bin]]
+name = "gpu-perf"
+
+[dependencies]
+drillx = { path = "../../drillx" ,features=["cuda"]}
+num_cpus = "1.16.0"
+
