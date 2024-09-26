@@ -27,6 +27,7 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
         memcpy(seed + 32, &nonce_offset, 8);
         ctxs[i] = hashx_alloc(HASHX_INTERPRETED);
         if (!ctxs[i] || !hashx_make(ctxs[i], seed, 40)) {
+            //TODO: skip the error batch i if make hashx failed!!
             printf("Failed to make hash:%d,%d\n",nonce_offset,i);
             return;
         }

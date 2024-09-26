@@ -2,6 +2,7 @@ extern "C" {
     // pub static BATCH_SIZE: u32;
     pub fn hash(challenge: *const u8, nonce: u64, out: *mut u64,batch_size:u32);
     pub fn solve_all_stages(hashes: *const u64, out: *mut u8, sols: *mut u32);
+    pub fn test_hash();
 }
 
 
@@ -15,6 +16,13 @@ mod tests {
 
     fn hashspace_size() -> usize {
         unsafe { BATCH_SIZE as usize * INDEX_SPACE }
+    }
+
+    #[test]
+    fn test_hashx(){
+        unsafe{
+            test_hash();
+        }
     }
 
     #[test]

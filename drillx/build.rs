@@ -14,6 +14,7 @@ fn main() {
         .include("cuda/hashx/include")
         .include("cuda/hashx/src")
         .file("cuda/drillx.cu")
+        .file("cuda/test_hash.cu")
         .file("cuda/equix/src/context.cu")
         .file("cuda/equix/src/equix.cu")
         .file("cuda/equix/src/solver.cu")

@@ -6,20 +6,21 @@ use drillx::{
 use num_cpus;
 use std::{sync::Arc, thread, time::Instant};
 
-const BATCH_SIZE: u32 = 512*4;
+const BATCH_SIZE: u32 = 512*14;
 const INDEX_SPACE: usize = 65536;
 fn hashspace_size() -> usize {
     BATCH_SIZE as usize * INDEX_SPACE
 }
 
 fn main() {
-
-    let challenge = [255; 32];
-    let nonce = 0u64;
-    // let nonce=[2;8];
-    println!("Start gpu perf for drillx:{} ...",nonce);
-    let mut hashes = vec![0u64; hashspace_size()];
+    
     unsafe {
+
+        let challenge = [255; 32];
+        let nonce = 0u64;
+        // let nonce=[2;8];
+        println!("Start gpu perf for drillx:{} ...",nonce);
+        let mut hashes = vec![0u64; hashspace_size()];
         // Do compute heavy hashing on gpu
         let timer = Instant::now();
         hash(
@@ -78,10 +79,10 @@ fn main() {
         // for handle in handles {
         //     handle.join().expect("Failed to join thread");
         // }
-        println!(
-            "Did {} hashes in {} ms",
-            BATCH_SIZE,
-            timer.elapsed().as_millis()
-        );
+        // println!(
+        //     "Did {} hashes in {} ms",
+        //     BATCH_SIZE,
+        //     timer.elapsed().as_millis()
+        // );
     }
 }
