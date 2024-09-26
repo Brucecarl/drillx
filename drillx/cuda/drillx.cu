@@ -7,10 +7,13 @@
 #include "equix/src/solver.h"
 #include "equix/src/solver_heap.h"
 #include "hashx/src/context.h"
+#include <chrono>
 
 // const int BATCH_SIZE = 512;
 
 extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch_size) {
+    uint64_t st1=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
     // Generate a hash function for each (challenge, nonce)
     hashx_ctx** ctxs;
     if (cudaMallocManaged(&ctxs, batch_size * sizeof(hashx_ctx*)) != cudaSuccess) {
@@ -29,6 +32,8 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
         }
     }
 
+    uint64_t st=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("seed time:%d\n",st-st1);
     // Allocate space to hold on to hash values (~500KB per seed)
     uint64_t** hash_space;
     if (cudaMallocManaged(&hash_space, batch_size * sizeof(uint64_t*)) != cudaSuccess) {
@@ -47,11 +52,15 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
     dim3 blocksPerGrid((65536 * batch_size + threadsPerBlock.x - 1) / threadsPerBlock.x); // enough blocks to cover batch
     do_hash_stage0i<<<blocksPerGrid, threadsPerBlock>>>(ctxs, hash_space);
     cudaDeviceSynchronize();
-
+    
+    uint64_t ht=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("hash time:%d\n",ht-st);
     // Copy hashes back to cpu
     for (int i = 0; i < batch_size; i++) {
         cudaMemcpy(out + i * INDEX_SPACE, hash_space[i], INDEX_SPACE * sizeof(uint64_t), cudaMemcpyDeviceToHost);
     }
+    uint64_t cpt=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("copy time:%d\n",cpt-ht);
 
     // Free memory
     for (int i = 0; i < batch_size; i++) {

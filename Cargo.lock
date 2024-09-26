@@ -1771,6 +1771,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpu-perf"
+version = "2.0.0-alpha"
+dependencies = [
+ "drillx",
+ "num_cpus",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
