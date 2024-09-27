@@ -14,6 +14,6 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
 extern "C" void solve_all_stages(uint64_t *hashes, uint8_t *out, uint32_t *sols);
 extern "C" int test_hash();
 
-__global__ void do_hash_stage0i(hashx_ctx** ctxs, uint64_t** hash_space);
+__global__ void do_hash_stage0i(hashx_ctx** ctxs, uint64_t* hash_space);
 
 #endif

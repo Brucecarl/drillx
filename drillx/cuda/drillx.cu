@@ -36,17 +36,21 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
     uint64_t st=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     printf("seed time:%d\n",st-st1);
     // Allocate space to hold on to hash values (~500KB per seed)
-    uint64_t** hash_space;
-    if (cudaMallocManaged(&hash_space, batch_size * sizeof(uint64_t*)) != cudaSuccess) {
-        printf("Failed to allocate managed memory for hash_space\n");
+    uint64_t* hash_space=nullptr;
+    // if (cudaMallocManaged(&hash_space, batch_size *INDEX_SPACE* sizeof(uint64_t)) != cudaSuccess) {
+    //     printf("Failed to allocate managed memory for hash_space\n");
+    //     return;
+    // }
+    if(cudaMalloc((void**)&hash_space, batch_size *INDEX_SPACE* sizeof(uint64_t))!= cudaSuccess){
+        printf("Failed to allocate device memory for hash_space\n");
         return;
     }
-    for (int i = 0; i < batch_size; i++) {
-        if (cudaMallocManaged(&hash_space[i], INDEX_SPACE * sizeof(uint64_t)) != cudaSuccess) {
-            printf("Failed to allocate managed memory for hash_space[%d]\n", i);
-            return;
-        }
-    }
+    // for (int i = 0; i < batch_size; i++) {
+        // if (cudaMallocManaged(&hash_space[i], INDEX_SPACE * sizeof(uint64_t)) != cudaSuccess) {
+        //     printf("Failed to allocate managed memory for hash_space[%d]\n", i);
+        //     return;
+        // }
+    // }
 
     // Launch kernel to parallelize hashx operations
     dim3 threadsPerBlock(256); // 256 threads per block
@@ -57,16 +61,17 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
     uint64_t ht=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     printf("hash time:%d\n",ht-st);
     // Copy hashes back to cpu
-    for (int i = 0; i < batch_size; i++) {
-        cudaMemcpy(out + i * INDEX_SPACE, hash_space[i], INDEX_SPACE * sizeof(uint64_t), cudaMemcpyDeviceToHost);
-    }
+    // for (int i = 0; i < batch_size; i++) {
+    //     cudaMemcpy(out + i * INDEX_SPACE, hash_space[i], INDEX_SPACE * sizeof(uint64_t), cudaMemcpyDeviceToHost);
+    // }
+    cudaMemcpy(out, hash_space, batch_size*INDEX_SPACE * sizeof(uint64_t), cudaMemcpyDeviceToHost);
     uint64_t cpt=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     printf("copy time:%d\n",cpt-ht);
 
     // Free memory
     for (int i = 0; i < batch_size; i++) {
         hashx_free(ctxs[i]);
-        cudaFree(hash_space[i]);
+        // cudaFree(hash_space[i]);
     }
     cudaFree(hash_space);
     cudaFree(ctxs);
@@ -78,12 +83,12 @@ extern "C" void hash(uint8_t *challenge, uint64_t nonce, uint64_t *out,int batch
     }
 }
 
-__global__ void do_hash_stage0i(hashx_ctx** ctxs, uint64_t** hash_space) {
+__global__ void do_hash_stage0i(hashx_ctx** ctxs, uint64_t* hash_space) {
     uint32_t item = blockIdx.x * blockDim.x + threadIdx.x;
     uint32_t batch_idx = item / INDEX_SPACE;
     uint32_t i = item % INDEX_SPACE;
     // if (batch_idx < BATCH_SIZE) {
-    hash_stage0i(ctxs[batch_idx], hash_space[batch_idx], i);
+    hash_stage0i(ctxs[batch_idx], hash_space+batch_idx*INDEX_SPACE, i);
     // }
 }
 
